@@ -119,13 +119,13 @@ GameManager.prototype.prepareTiles = function (grid) {
   });
 };
 
-GameManager.prototype.createNextGrid = function (direction) {
+GameManager.prototype.createNextGrid = function (grid, direction) {
   var self = this;
   var vector     = this.getVector(direction);
   var traversals = this.buildTraversals(vector);
   var moved      = false;
   
-  var newGrid = new Grid(this.size, this.storageManager.getGameState().grid.cells);
+  var newGrid = new Grid(this.size, grid.serialize().cells);
   var cell, tile;
 
   this.prepareTiles(newGrid);
@@ -173,8 +173,6 @@ GameManager.prototype.moveTile = function (grid, tile, cell) {
   grid.cells[tile.x][tile.y] = null;
   grid.cells[cell.x][cell.y] = tile;
   tile.updatePosition(cell);
-
-  
 };
 
 // Move tiles on the grid in the specified direction

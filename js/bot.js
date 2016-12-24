@@ -17,11 +17,18 @@ function Bot()
     }    
 }
 
-Bot.prototype.firstEvalFunc = function(grid)
+Bot.prototype.findFurthestPosition = GameManager.prototype.findFurthestPosition;
+Bot.prototype.createNextGrid = GameManager.prototype.createNextGrid;
+Bot.prototype.getVector = GameManager.prototype.getVector;
+Bot.prototype.tileMatchesAvailable = GameManager.prototype.tileMatchesAvailable;
+Bot.prototype.movesAvailable = GameManager.prototype.movesAvailable;
+
+
+Bot.prototype.findCornerTile = function(grid)
 {
     var totalValue = 0;
 
-    var maxCell = 0;
+    var maxCell = 3;
     var maxVal = 0;
     for(var i = 0; i < this.cornerCo.length; i++)
     {
@@ -33,8 +40,14 @@ Bot.prototype.firstEvalFunc = function(grid)
         }
     }
 
-    var xModifier = cornerCo[maxCell].x == 0 ? 1 : -1;
-    var yModifier = cornerCo[maxCell].y == 0 ? 1 : -1;
+    return maxCell;
+};
+
+Bot.prototype.firstEvalFunc = function(grid)
+{
+    var maxCell = this.findCornerTile(grid);
+    var xModifier = this.cornerCo[maxCell].x == 0 ? 1 : -1;
+    var yModifier = this.cornerCo[maxCell].y == 0 ? 1 : -1;
     var x, countX;
     var y, countY;
 
@@ -50,33 +63,25 @@ Bot.prototype.firstEvalFunc = function(grid)
                 
                 if(xCell)
                 {
-                    if(cell == xCell)
-                    {
-                        totalValue += cell * (this.euclidGrids[maxCell][y][x] + this.euclidGrids[maxCell][y][x + xModifier]);
-                    }
                     if(cell >= xCell)
                     {
-                        totalValue += cell * this.euclidGrids[maxCell][y][x];
+                        totalValue += xCell / cell * this.euclidGrids[maxCell][y][x];
                     }
                     else
                     {
-                        totalValue -= cell * this.euclidGrids[maxCell][y][x];
+                        totalValue -= xCell / cell * this.euclidGrids[maxCell][y][x];
                     }
                 }
 
                 if(yCell)
                 {
-                    if(cell == yCell)
+                    if(cell >= yCell)
                     {
-                        totalValue += cell * (this.euclidGrids[maxCell][y][x] + this.euclidGrids[maxCell][y + yModifier][x]);
-                    }
-                    if(cell > yCell)
-                    {
-                        totalValue += cell * this.euclidGrids[maxCell][y][x];
+                        totalValue += yCell / cell * this.euclidGrids[maxCell][y][x];
                     }
                     else
                     {
-                        totalValue -= cell * this.euclidGrids[maxCell][y][x];
+                        totalValue -= yCell / cell * this.euclidGrids[maxCell][y][x];
                     }
                 }
             }
@@ -85,3 +90,111 @@ Bot.prototype.firstEvalFunc = function(grid)
 
     return totalValue;
 };
+
+Bot.prototype.secondEvalFunct = function(grid, cell, value)
+{
+    var tile = grid.cellContent(cell);
+
+    var cornerCell = this.findCornerTile(grid);
+    var xModifier = this.cornerCo[maxCell].x == 0 ? 1 : -1;
+    var yModifier = this.cornerCo[maxCell].y == 0 ? 1 : -1;
+
+    var score = 0;
+
+    var euclidValue = this.euclidGrids[cornerCell][cell.x][cell.y];
+
+    for(var i = 0; i < 4; i++)
+    {
+        var vector = this.getVector(i);
+        var nextTile = grid.cellContent({x: cell.x + vector.x, y: cell.y + vector.y});
+        if(nextTile)
+        {
+            if(vector.x != 0)
+            {
+                var scoreModifier = vector.x == xModifier ? 1 : -1;
+                score += tile / nextTile * scoreModifier * euclidValue;
+            }
+            else
+            {
+                var scoreModifier = vector.y == yModifier ? 1 : -1;
+                score += tile / nextTile * scoreModifier * euclidValue;
+            }
+        }
+    }
+
+    return score;
+}   
+
+Bot.prototype.minMax = function(startGrid, currentDepth, maxDepth)
+{
+    if(currentDepth == maxDepth + 1)
+    {
+        return this.firstEvalFunc(grid);
+    }
+
+    if(currentDepth % 2 == 0)
+    {
+        var moves = [];
+        for(var i = 0; i < 4; i++)
+        {
+            var newGridObject = this.createNextGrid(grid, i);
+            if(newGridObject.isMoved && this.movesAvailable(newGridObject.grid))
+            {
+                var value = this.minMax(newGridObject.grid, currentDepth + 1, maxDepth);
+                var newMove = {score : value.score, move : i};
+                moves.push(newMove);
+            }
+            
+        }
+        if(moves.length > 0)
+        {
+            moves.sort(function(a,b) {return b.score - a.score});
+            return moves[0];
+        }
+        else
+        {
+            return {score: -Number.MAX_SAFE_INTEGER, move: 0};
+        }
+        
+    }
+    else
+    {
+        var moves = [];
+        var oldGrid = grid.serialize();
+        for(var y = 0; y < 4; y++)
+        {
+            for(var x = 0; x < 4; x++)
+            {
+                var cell = grid.cellContent({x: x, y: y});
+                if(cell == null)
+                {
+                    var newGrid = new Grid(oldGrid.size, oldGrid.cells);
+                    newGrid.insertTile(new Tile({x: x, y: y}, 2));
+                    if(this.movesAvailable(newGrid))
+                    {
+                        var value = minMax(newGrid, currentDepth + 1, maxDepth);
+                        moves.push({score: value.score});
+                    }
+
+                    newGrid = new Grid(oldGrid.size, oldGrid.cells);
+                    newGrid.insertTile(new Tile({x: x, y: y}, 4));
+                    if(this.movesAvailable(newGrid))
+                    {
+                        var value = minMax(newGrid, currentDepth + 1, maxDepth);
+                        moves.push({score: value.score});
+                    }
+                }
+            }
+        }
+
+        if(moves.length > 0)
+        {
+            moves.sort(function(a,b) {return a.score - b.score});
+            return moves[0];
+        }
+        else
+        {
+            return {score: Number.MAX_SAFE_INTEGER};
+        }
+    }
+}
