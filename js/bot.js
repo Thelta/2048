@@ -1,42 +1,44 @@
 function Bot()
 {
+    this.size = 4;
     this.euclidGrids = [];
     this.cornerCo = [{x:0,y:0}, {x:0,y:3}, {x:3,y:0}, {x:3,y:3}];
     for(var i = 0; i < 4; i++)
     {
-        var cornerX = this.edgeCo[i].x, cornerY = this.edgeCo[i].y;
+        var cornerX = this.cornerCo[i].x, cornerY = this.cornerCo[i].y;
         this.euclidGrids[i] = [[],[],[],[]];
         for(var y = 0; y < 4; y++)
         {
             for(var x = 0; x < 4; x++)
             {
                 var diffX = 4 - cornerX + x, diffY = 4 - cornerY + y;
-                this.euclidGrids[i][x][y] = Math.sqrt(diffX * diffX + diffY * diffY);
+                this.euclidGrids[i][x][y] = Math.sqrt(diffX * diffX + diffY * diffY );
             }
         }
     }    
 }
 
-Bot.prototype.findFurthestPosition = GameManager.prototype.findFurthestPosition;
+Bot.prototype.findFarthestPosition = GameManager.prototype.findFarthestPosition;
 Bot.prototype.createNextGrid = GameManager.prototype.createNextGrid;
 Bot.prototype.getVector = GameManager.prototype.getVector;
 Bot.prototype.tileMatchesAvailable = GameManager.prototype.tileMatchesAvailable;
 Bot.prototype.movesAvailable = GameManager.prototype.movesAvailable;
-
+Bot.prototype.buildTraversals = GameManager.prototype.buildTraversals;
+Bot.prototype.prepareTiles = GameManager.prototype.prepareTiles;
+Bot.prototype.moveTile = GameManager.prototype.moveTile;
+Bot.prototype.positionsEqual = GameManager.prototype.positionsEqual;
 
 Bot.prototype.findCornerTile = function(grid)
 {
-    var totalValue = 0;
-
     var maxCell = 3;
     var maxVal = 0;
     for(var i = 0; i < this.cornerCo.length; i++)
     {
-        var val = grid.cellContent(cornerCo[i]);
-        if(val && maxVal < val)
+        var value = grid.cellContent(this.cornerCo[i]);
+        if(value && maxVal < value.value)
         {
             maxCell = i;
-            maxVal = val;
+            maxVal = value.value;
         }
     }
 
@@ -50,10 +52,12 @@ Bot.prototype.firstEvalFunc = function(grid)
     var yModifier = this.cornerCo[maxCell].y == 0 ? 1 : -1;
     var x, countX;
     var y, countY;
+    var totalValue = 0;
+    var processed = 0;
 
-    for(y = cornerCo[maxCell].y, countY = 0; countY < 4; y += 1 * yModifier, countY++)
+    for(y = this.cornerCo[maxCell].y, countY = 0; countY < 4; y += 1 * yModifier, countY++)
     {
-        for(x = cornerCo[maxCell].x, countX = 0; countX < 4; x += 1 * xModifier, countX++)
+        for(x = this.cornerCo[maxCell].x, countX = 0; countX < 4; x += 1 * xModifier, countX++)
         {
             var cell = grid.cellContent({x: x, y: y});
             if(cell)
@@ -63,26 +67,28 @@ Bot.prototype.firstEvalFunc = function(grid)
                 
                 if(xCell)
                 {
-                    if(cell >= xCell)
+                    if(cell.value >= xCell.value)
                     {
-                        totalValue += xCell / cell * this.euclidGrids[maxCell][y][x];
+                        totalValue += xCell.value / cell.value * this.euclidGrids[maxCell][y][x];
                     }
                     else
                     {
-                        totalValue -= xCell / cell * this.euclidGrids[maxCell][y][x];
+                        totalValue -= xCell.value / cell.value * this.euclidGrids[maxCell][y][x];
                     }
+                    processed++;
                 }
 
                 if(yCell)
                 {
-                    if(cell >= yCell)
+                    if(cell.value >= yCell.value)
                     {
-                        totalValue += yCell / cell * this.euclidGrids[maxCell][y][x];
+                        totalValue += yCell.value / cell.value * this.euclidGrids[maxCell][y][x];
                     }
                     else
                     {
-                        totalValue -= yCell / cell * this.euclidGrids[maxCell][y][x];
+                        totalValue -= yCell.value / cell.value * this.euclidGrids[maxCell][y][x];
                     }
+                    processed++;
                 }
             }
         }
@@ -125,11 +131,13 @@ Bot.prototype.secondEvalFunct = function(grid, cell, value)
     return score;
 }   
 
-Bot.prototype.minMax = function(startGrid, currentDepth, maxDepth)
+Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
 {
+    //console.log("cd " + currentDepth);
+    //console.log("md " + maxDepth);
     if(currentDepth == maxDepth + 1)
     {
-        return this.firstEvalFunc(grid);
+        return {score: this.firstEvalFunc(grid)};
     }
 
     if(currentDepth % 2 == 0)
@@ -138,10 +146,12 @@ Bot.prototype.minMax = function(startGrid, currentDepth, maxDepth)
         for(var i = 0; i < 4; i++)
         {
             var newGridObject = this.createNextGrid(grid, i);
-            if(newGridObject.isMoved && this.movesAvailable(newGridObject.grid))
+            if(newGridObject.moved && this.movesAvailable(newGridObject.grid))
             {
                 var value = this.minMax(newGridObject.grid, currentDepth + 1, maxDepth);
-                var newMove = {score : value.score, move : i};
+                var emptyTiles = newGridObject.grid.availableCells().length;
+                var totalScore = newGridObject.merged * (1 - emptyTiles / 16) * 2 + value.score;
+                var newMove = {score : totalScore, move : i};
                 moves.push(newMove);
             }
             
@@ -159,6 +169,7 @@ Bot.prototype.minMax = function(startGrid, currentDepth, maxDepth)
     }
     else
     {
+        //TODO: avaibleCells
         var moves = [];
         var oldGrid = grid.serialize();
         for(var y = 0; y < 4; y++)
@@ -172,7 +183,7 @@ Bot.prototype.minMax = function(startGrid, currentDepth, maxDepth)
                     newGrid.insertTile(new Tile({x: x, y: y}, 2));
                     if(this.movesAvailable(newGrid))
                     {
-                        var value = minMax(newGrid, currentDepth + 1, maxDepth);
+                        var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
                         moves.push({score: value.score});
                     }
 
@@ -180,7 +191,7 @@ Bot.prototype.minMax = function(startGrid, currentDepth, maxDepth)
                     newGrid.insertTile(new Tile({x: x, y: y}, 4));
                     if(this.movesAvailable(newGrid))
                     {
-                        var value = minMax(newGrid, currentDepth + 1, maxDepth);
+                        var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
                         moves.push({score: value.score});
                     }
                 }

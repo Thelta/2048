@@ -62,6 +62,14 @@ KeyboardInputManager.prototype.listen = function () {
       }
     }
 
+    if(!modifiers && event.which === 113)
+    {
+      var bot = new Bot();
+      var newMove = bot.minMax(a.grid, 0, 2);
+      //console.log(newMove);
+      self.emit("move", newMove.move);
+    }
+
     // R key restarts the game
     if (!modifiers && event.which === 82) {
       self.restart.call(self, event);

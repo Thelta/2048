@@ -111,7 +111,7 @@ GameManager.prototype.serialize = function () {
 
 // Save all tile positions and remove merger info
 GameManager.prototype.prepareTiles = function (grid) {
-  this.grid.eachCell(function (x, y, tile) {
+  grid.eachCell(function (x, y, tile) {
     if (tile) {
       tile.mergedFrom = null;
       tile.savePosition();
@@ -120,13 +120,17 @@ GameManager.prototype.prepareTiles = function (grid) {
 };
 
 GameManager.prototype.createNextGrid = function (grid, direction) {
-  var self = this;
   var vector     = this.getVector(direction);
+  var randomde = Math.random() * 10;
   var traversals = this.buildTraversals(vector);
   var moved      = false;
   
-  var newGrid = new Grid(this.size, grid.serialize().cells);
+  var serializeGrid = grid.serialize();
+  var newGrid = new Grid(serializeGrid.size, serializeGrid.cells);
   var cell, tile;
+  var self = this;
+
+  var mergedValue = 0;
 
   this.prepareTiles(newGrid);
   
@@ -134,7 +138,6 @@ GameManager.prototype.createNextGrid = function (grid, direction) {
     traversals.y.forEach(function (y) {
       cell = { x: x, y: y };
       tile = newGrid.cellContent(cell);
-
       if (tile) {
         var positions = self.findFarthestPosition(newGrid, cell, vector);
         var next      = newGrid.cellContent(positions.next);
@@ -150,8 +153,7 @@ GameManager.prototype.createNextGrid = function (grid, direction) {
           // Converge the two tiles' positions
           tile.updatePosition(positions.next);
 
-          // Update the score
-          self.score += merged.value;
+          mergedValue = merged.value;
 
           // The mighty 2048 tile
           if (merged.value === 2048) self.won = true;
@@ -165,7 +167,7 @@ GameManager.prototype.createNextGrid = function (grid, direction) {
       }
     });
   });
-  return {grid: newGrid, moved: moved};
+  return {grid: newGrid, moved: moved, merged: mergedValue};
 }
 
 // Move a tile and its representation
@@ -179,11 +181,9 @@ GameManager.prototype.moveTile = function (grid, tile, cell) {
 GameManager.prototype.move = function (direction) {
   // 0: up, 1: right, 2: down, 3: left
   var self = this;
-
   if (this.isGameTerminated()) return; // Don't do anything if the game's over
 
   var cell, tile;
-
   var vector     = this.getVector(direction);
   var traversals = this.buildTraversals(vector);
   var moved      = false;
@@ -260,11 +260,9 @@ GameManager.prototype.buildTraversals = function (vector) {
     traversals.x.push(pos);
     traversals.y.push(pos);
   }
-
   // Always traverse from the farthest cell in the chosen direction
   if (vector.x === 1) traversals.x = traversals.x.reverse();
   if (vector.y === 1) traversals.y = traversals.y.reverse();
-
   return traversals;
 };
 
