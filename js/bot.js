@@ -186,6 +186,11 @@ Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
                         var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
                         moves.push({score: value.score});
                     }
+                    else
+                    {
+                        var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
+                        moves.push({score: -Number.MAX_SAFE_INTEGER});
+                    }
 
                     newGrid = new Grid(oldGrid.size, oldGrid.cells);
                     newGrid.insertTile(new Tile({x: x, y: y}, 4));
@@ -193,6 +198,11 @@ Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
                     {
                         var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
                         moves.push({score: value.score});
+                    }
+                    else
+                    {
+                        var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
+                        moves.push({score: -Number.MAX_SAFE_INTEGER});
                     }
                 }
             }

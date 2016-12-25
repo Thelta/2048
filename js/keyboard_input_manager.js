@@ -65,7 +65,10 @@ KeyboardInputManager.prototype.listen = function () {
     if(!modifiers && event.which === 113)
     {
       var bot = new Bot();
-      var newMove = bot.minMax(a.grid, 0, 2);
+      var emptyCells = a.grid.availableCells();
+      var depth = 0;
+      depth = emptyCells.length <= 6 ? 4 : 2;
+      var newMove = bot.minMax(a.grid, 0, depth);
       //console.log(newMove);
       self.emit("move", newMove.move);
     }
