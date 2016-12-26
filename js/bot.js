@@ -1,9 +1,9 @@
 function Bot()
 {
     this.size = 4;
-    this.euclidGrids = [];
-    this.cornerCo = [{x:0,y:0}, {x:0,y:3}, {x:3,y:0}, {x:3,y:3}];
-    for(var i = 0; i < 4; i++)
+    this.euclidGrids = [];  //Her bir köşe için her noktanın öklit uzaklıkları
+    this.cornerCo = [{x:0,y:0}, {x:0,y:3}, {x:3,y:0}, {x:3,y:3}];   //köşeler
+    for(var i = 0; i < 4; i++)  //euclidGrids hesaplanması
     {
         var cornerX = this.cornerCo[i].x, cornerY = this.cornerCo[i].y;
         this.euclidGrids[i] = [[],[],[],[]];
@@ -28,6 +28,7 @@ Bot.prototype.prepareTiles = GameManager.prototype.prepareTiles;
 Bot.prototype.moveTile = GameManager.prototype.moveTile;
 Bot.prototype.positionsEqual = GameManager.prototype.positionsEqual;
 
+//En büyük değerli köşeyi bul
 Bot.prototype.findCornerTile = function(grid)
 {
     var maxCell = 3;
@@ -45,6 +46,7 @@ Bot.prototype.findCornerTile = function(grid)
     return maxCell;
 };
 
+//Evaluation fonksiyonu
 Bot.prototype.firstEvalFunc = function(grid)
 {
     var maxCell = this.findCornerTile(grid);
@@ -54,6 +56,7 @@ Bot.prototype.firstEvalFunc = function(grid)
     var y, countY;
     var totalValue = 0;
 
+    //Tablodaki her değer için
     for(y = this.cornerCo[maxCell].y, countY = 0; countY < 4; y += 1 * yModifier, countY++)
     {
         for(x = this.cornerCo[maxCell].x, countX = 0; countX < 4; x += 1 * xModifier, countX++)
@@ -61,8 +64,8 @@ Bot.prototype.firstEvalFunc = function(grid)
             var cell = grid.cellContent({x: x, y: y});
             if(cell)
             {                
-                var xCell = grid.cellContent({x: x + xModifier, y: y});
-                var yCell = grid.cellContent({x: x, y: y + yModifier});
+                var xCell = grid.cellContent({x: x + xModifier, y: y}); //Değerin sağındaki değer
+                var yCell = grid.cellContent({x: x, y: y + yModifier}); //Değerin yukarısındaki değer
                 
                 if(xCell)
                 {
@@ -94,60 +97,24 @@ Bot.prototype.firstEvalFunc = function(grid)
     return totalValue;
 };
 
-Bot.prototype.secondEvalFunct = function(grid, cell, value)
-{
-    var tile = grid.cellContent(cell);
-
-    var cornerCell = this.findCornerTile(grid);
-    var xModifier = this.cornerCo[maxCell].x == 0 ? 1 : -1;
-    var yModifier = this.cornerCo[maxCell].y == 0 ? 1 : -1;
-
-    var score = 0;
-
-    var euclidValue = this.euclidGrids[cornerCell][cell.x][cell.y];
-
-    for(var i = 0; i < 4; i++)
-    {
-        var vector = this.getVector(i);
-        var nextTile = grid.cellContent({x: cell.x + vector.x, y: cell.y + vector.y});
-        if(nextTile)
-        {
-            if(vector.x != 0)
-            {
-                var scoreModifier = vector.x == xModifier ? 1 : -1;
-                score += tile / nextTile * scoreModifier * euclidValue;
-            }
-            else
-            {
-                var scoreModifier = vector.y == yModifier ? 1 : -1;
-                score += tile / nextTile * scoreModifier * euclidValue;
-            }
-        }
-    }
-
-    return score;
-}   
-
 Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
 {
-    //console.log("cd " + currentDepth);
-    //console.log("md " + maxDepth);
-    if(currentDepth == maxDepth + 1)
+    if(currentDepth == maxDepth + 1)    //Eğer max derinliğe ulaşılmışsa
     {
-        return {score: this.firstEvalFunc(grid)};
+        return {score: this.firstEvalFunc(grid)};   //Tablonun değerini hesapla
     }
 
-    if(currentDepth % 2 == 0)
+    if(currentDepth % 2 == 0)   //Max seçimi
     {
         var moves = [];
-        for(var i = 0; i < 4; i++)
+        for(var i = 0; i < 4; i++)  //Her hareket için
         {
-            var newGridObject = this.createNextGrid(grid, i);
-            if(newGridObject.moved && this.movesAvailable(newGridObject.grid))
+            var newGridObject = this.createNextGrid(grid, i);  //O hareket için grid yarat
+            if(newGridObject.moved && this.movesAvailable(newGridObject.grid))  //eğer hareket olduysa ve oyun kaybetme durumu oluşmadıysa
             {
-                var value = this.minMax(newGridObject.grid, currentDepth + 1, maxDepth);
+                var value = this.minMax(newGridObject.grid, currentDepth + 1, maxDepth);    //min değerini al
                 var emptyTiles = newGridObject.grid.availableCells().length;
-                var totalScore = newGridObject.merged * (1 - emptyTiles / 16) * 2 + value.score;
+                var totalScore = newGridObject.merged * (1 - emptyTiles / 16) * 2 + value.score; //scoru hesapla
                 var newMove = {score : totalScore, move : i};
                 moves.push(newMove);
             }
@@ -155,6 +122,12 @@ Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
         }
         if(moves.length > 0)
         {
+            if(currentDepth < 1)
+            {
+                console.log("==================");
+                console.log(moves);
+                console.log("==================");
+            }
             moves.sort(function(a,b) {return b.score - a.score});
             return moves[0];
         }
@@ -174,32 +147,32 @@ Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
             for(var x = 0; x < 4; x++)
             {
                 var cell = grid.cellContent({x: x, y: y});
-                if(cell == null)
+                if(cell == null)    //Eğer boş noktaysa
                 {
                     var newGrid = new Grid(oldGrid.size, oldGrid.cells);
-                    newGrid.insertTile(new Tile({x: x, y: y}, 2));
+                    newGrid.insertTile(new Tile({x: x, y: y}, 2));  //2 değerini yerleştir
                     if(this.movesAvailable(newGrid))
                     {
-                        var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
-                        moves.push({score: value.score});
+                        var value = this.minMax(newGrid, currentDepth + 1, maxDepth); //maxı seç
+                        moves.push({score: value.score, place: {x: x, y: y}, value: 2});
                     }
                     else
                     {
                         //var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
-                        moves.push({score: -Number.MAX_SAFE_INTEGER});
+                        moves.push({score: -Number.MAX_SAFE_INTEGER, place: {x: x, y: y}});
                     }
 
                     newGrid = new Grid(oldGrid.size, oldGrid.cells);
-                    newGrid.insertTile(new Tile({x: x, y: y}, 4));
+                    newGrid.insertTile(new Tile({x: x, y: y}, 4)); //4 değerini yerleştir
                     if(this.movesAvailable(newGrid))
                     {
-                        var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
-                        moves.push({score: value.score});
+                        var value = this.minMax(newGrid, currentDepth + 1, maxDepth); //maxı seç
+                        moves.push({score: value.score, place: {x: x, y: y}, value: 4});
                     }
                     else
                     {
                         //var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
-                        moves.push({score: -Number.MAX_SAFE_INTEGER});
+                        moves.push({score: -Number.MAX_SAFE_INTEGER, place: {x: x, y: y}});
                     }
                 }
             }
@@ -208,6 +181,11 @@ Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
         if(moves.length > 0)
         {
             moves.sort(function(a,b) {return a.score - b.score});
+            if(currentDepth == 1)
+            {
+                console.log(moves);
+                console.log("-----------------------");
+            }
             return moves[0];
         }
         else

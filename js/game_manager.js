@@ -8,6 +8,7 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.startTiles     = 2;
   this.gamesWon = 0;
   this.totalGames = 0;
+  this.gameRun = 1;
 
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
@@ -20,6 +21,8 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
       this.run100()
 }
   }.bind(this));
+  this.inputManager.on("oneMove", this.oneMove.bind(this));
+
 
   this.setup();
 }
@@ -336,7 +339,7 @@ GameManager.prototype.run100 = function ()
 
       var emptyCells = this.grid.availableCells();
       depth = emptyCells.length <= 6 ? 4 : 2;
-      var newMove = bot.minMax(this.grid, 0, depth);
+      var newMove = bot.minMax(this.grid, 0, depth, 0);
       //console.log(newMove);
       this.move(newMove.move);
       if(this.running && !this.over && !this.won)
@@ -354,7 +357,7 @@ GameManager.prototype.run100 = function ()
         }
 
         this.totalGames++;
-        if(this.totalGames <= 100)
+        if(this.totalGames < this.gameRun)
         {
           var self = this;
           this.restart()
@@ -364,4 +367,16 @@ GameManager.prototype.run100 = function ()
           }, 1000);
         }
       }
+}
+
+GameManager.prototype.oneMove = function()
+{
+    var bot = new Bot();
+    var depth = 0;
+
+    var emptyCells = this.grid.availableCells();
+    depth = emptyCells.length <= 6 ? 4 : 2;
+    var newMove = bot.minMax(this.grid, 0, depth, 0);
+    console.log(newMove);
+    this.move(newMove.move);
 }

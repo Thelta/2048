@@ -16,7 +16,7 @@ Bot
 Botun genel çalışma mantığında minimax algoritması kullanılmıştır.Evaluation fonksiyonunda ise iki temel
 öge vardır.Bunlar panonun düzeni ve o sırada yapılan birleştirme değeridir.
 \begin{equation}
-f(x) = P(x) + 2 * M(x)
+f(x) = P(x) + 2 * (1 - Boş Kutu Sayısı / 16) * M(x)
 \end{equation}
 Burada P(x) panoun düzeni, M(x) ise birleştirme değeridir.
 
@@ -27,10 +27,80 @@ Pano Düzeni
 2048'i kazanmanın en kesin yolu panoyu sıralı ve düzenli tutmaktır.Panodaki sayılar birbirlerini sürekli yutacak
 şekilde yerleştirilmeli ve panodaki değerler birbirine yakın olmalıdır.
 
-Bunun hesabı için oyuna başlanmadan önce her bir köşe için panodaki her karenin o köşeye öklit uzaklığı hesaplanır.
-Daha sonra her hamle için o panonun en büyük değer sahip köşesi bulunur.Sonra o köşeye göre değişmek üzere her karenin
+Bunun hesabı için oyuna başlanmadan önce her bir köşe için panodaki her karenin o köşeye olan öklit uzaklığı hesaplanır.
+Daha sonra her hamle için o panonun en büyük değere sahip olan köşesi bulunur.Sonra o her karenin
 aşağı ve sağ değerlerine bakılır.Eğer aşağı ya da sağ değeri o kareden büyük ise iki değerin oranının o karenin öklit değeriyle
 çarpılıp toplanır, küçük ise çıkartılır.
+
+Minimax Örneği
+======================
+Elimizde aşağıdaki gibi olan bir pano düşünelim.(X boş kutulardır.)
+
+
+ | | | | |
+---|---|---|---
+X|X|X|X
+X|X|X|X 
+2|X|X|X
+2|X|X|X 
+Bu durum için üç hareket gözlenlenebilir.
+
+ | | | | |
+---|---|---|---
+X|X|X|X
+X|X|X|X 
+X|X|X|X
+4|X|X|X 
+[Aşağı hareket]
+
+
+ | | | | |
+---|---|---|---
+4|X|X|X
+X|X|X|X 
+X|X|X|X
+X|X|X|X
+[Yukarı hareket]
+
+
+
+ | | | | |
+---|---|---|---
+X|X|X|X
+X|X|X|X
+X|X|X|2
+X|X|X|2 
+[Sağ hareket]
+
+Daha sonra her boş kutuya (X) ayrı ayrı 2 ve 4 değerleri konulacak ve sonraki max seçimi için kullanılacaktır.Yukarı hareket için
+max örneği göstermek istersek:
+
+ | | | | |
+---|---|---|---
+4|X|X|X
+2|X|X|X 
+X|X|X|X
+X|X|X|X
+[Yukarı hareket]
+
+Bu tablonun max değeri için sağ hareketi yapılması gerekir.Bu hareketin hesaplanması aşağıdaki gibidir.
+
+Değerlendirme fonksiyonu için aşağıdaki tabloyu kullanmamız gerekir.
+ | | | | |
+---|---|---|---
+5.656|5|4.472|4.123
+5|4.242|3.605|3.162
+4.472|3.605|2.828|2.236
+4.123|3.162|2.236|1.414
+
+4 için : (Aşağısı) 2 / 4 * 5.656 = 2.828, (Solu) 0 / 4 * 5.656 = 0
+
+2 için : (Aşağısı) 0 / 2 * 5 = 0, (Solu) 0 / 2 * 5 = 0
+
+Herhangi bir eklenme işlemi gerçekleşmediği için toplamda 2.828 idir.
+Her bulunan tablo için minimum u hesaplanırsa aşağı ve yukarı hareketlerde 0, sağ hareket için 0.5 değeri bulunur.Son max 
+değeri ise 1 puanla sağ hareketi bulunacaktır.
+
 
 Başarı Düzeyi
 ======================
