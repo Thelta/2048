@@ -1,0 +1,4 @@
+Oyunu çalıştırmak için index.html'i internet tarayıcısıyla açın.Bota oyunu bitirmek için F2'ye,
+hamle yaptırmak için F4'e basın.
+Rapor rapor.md.html'dir, internet tarayıcısıyla açın.
+Botun kodları bot.js dosyasının içindedir.

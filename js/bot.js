@@ -122,12 +122,6 @@ Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
         }
         if(moves.length > 0)
         {
-            if(currentDepth < 1)
-            {
-                console.log("==================");
-                console.log(moves);
-                console.log("==================");
-            }
             moves.sort(function(a,b) {return b.score - a.score});
             return moves[0];
         }
@@ -181,11 +175,6 @@ Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
         if(moves.length > 0)
         {
             moves.sort(function(a,b) {return a.score - b.score});
-            if(currentDepth == 1)
-            {
-                console.log(moves);
-                console.log("-----------------------");
-            }
             return moves[0];
         }
         else
