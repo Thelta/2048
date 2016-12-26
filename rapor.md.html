@@ -1,0 +1,43 @@
+<meta charset="utf-8">
+                    **2048 Bot**
+                        Atılhan Emre Dursunoğlu
+                        12011083
+
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js"></script>
+
+Tanıtım
+================
+2048, 4x4 panoda oynanan, sayıları kaydırarak aynı değerleri sayıları birleştirme amacı olan bir oyundur.
+Oyunun amacı 2048 sayısına ulaşmaktır.Bu projede 2048 oynayan bir bot oynanaması amaçlanmıştır.
+Botun başarısını ise 100 oyun içinde 2048'e ulaştığı oyunlar olarak hesaplanmıştır.
+
+Bot
+================
+Botun genel çalışma mantığında minimax algoritması kullanılmıştır.Evaluation fonksiyonunda ise iki temel
+öge vardır.Bunlar panonun düzeni ve o sırada yapılan birleştirme değeridir.
+\begin{equation}
+f(x) = P(x) + 2 * M(x)
+\end{equation}
+Burada P(x) panoun düzeni, M(x) ise birleştirme değeridir.
+
+
+
+Pano Düzeni
+-----------------------------------
+2048'i kazanmanın en kesin yolu panoyu sıralı ve düzenli tutmaktır.Panodaki sayılar birbirlerini sürekli yutacak
+şekilde yerleştirilmeli ve panodaki değerler birbirine yakın olmalıdır.
+
+Bunun hesabı için oyuna başlanmadan önce her bir köşe için panodaki her karenin o köşeye öklit uzaklığı hesaplanır.
+Daha sonra her hamle için o panonun en büyük değer sahip köşesi bulunur.Sonra o köşeye göre değişmek üzere her karenin
+aşağı ve sağ değerlerine bakılır.Eğer aşağı ya da sağ değeri o kareden büyük ise iki değerin oranının o karenin öklit değeriyle
+çarpılıp toplanır, küçük ise çıkartılır.
+
+Başarı Düzeyi
+======================
+Bot 100 oyunun 68'inde 2048 değerine gelebilmiştir.Geri kalan 32 değerde ise 1024'te kalıp daha düşük bir değerde 
+oyunu kaybetmemiştir.Şu anda bulunan diğer 2048 botlarından başarısı düşük olsa da diğer botlardan daha hızlı 
+çalışmaktadır.
+
+Oyunu genel kaybetme sebebi genellikle oyunun ilerleyen saflarında çok tehlikeli hamleler yapmasıdır.Bunun için
+en büyük köşeyi değerlendirme fonksiyonuna kattığımızda ise bunun değeri çok büyük gelmektedir ve kötü hamlelerini 
+düzeltmemektedir. 

@@ -3,12 +3,23 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.inputManager   = new InputManager;
   this.storageManager = new StorageManager;
   this.actuator       = new Actuator;
+  this.running = false;
 
   this.startTiles     = 2;
+  this.gamesWon = 0;
+  this.totalGames = 0;
 
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
+  this.inputManager.on('run100', function() {
+    if (this.running) {
+      this.running = false;
+    } else {
+      this.running = true;
+      this.run100()
+}
+  }.bind(this));
 
   this.setup();
 }
@@ -317,3 +328,40 @@ GameManager.prototype.tileMatchesAvailable = function (grid) {
 GameManager.prototype.positionsEqual = function (first, second) {
   return first.x === second.x && first.y === second.y;
 };
+
+GameManager.prototype.run100 = function ()
+{
+      var bot = new Bot();
+      var depth = 0;
+
+      var emptyCells = this.grid.availableCells();
+      depth = emptyCells.length <= 6 ? 4 : 2;
+      var newMove = bot.minMax(this.grid, 0, depth);
+      //console.log(newMove);
+      this.move(newMove.move);
+      if(this.running && !this.over && !this.won)
+      {
+        var self = this;
+        setTimeout(function(){
+                self.run100();
+          }, 100);
+      }
+      else
+      {
+        if(a.won)
+        {
+          this.gamesWon++;
+        }
+
+        this.totalGames++;
+        if(this.totalGames <= 100)
+        {
+          var self = this;
+          this.restart()
+                setTimeout(function(){
+          console.log("adasdsadasdsad");
+                self.run100();
+          }, 1000);
+        }
+      }
+}

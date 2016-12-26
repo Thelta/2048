@@ -11,8 +11,8 @@ function Bot()
         {
             for(var x = 0; x < 4; x++)
             {
-                var diffX = 4 - cornerX + x, diffY = 4 - cornerY + y;
-                this.euclidGrids[i][x][y] = Math.sqrt(diffX * diffX + diffY * diffY );
+                var diffX = 4 - Math.abs(cornerX - x), diffY = 4 - Math.abs(cornerY - y);
+                this.euclidGrids[i][y][x] = Math.sqrt(diffX * diffX + diffY * diffY);
             }
         }
     }    
@@ -53,7 +53,6 @@ Bot.prototype.firstEvalFunc = function(grid)
     var x, countX;
     var y, countY;
     var totalValue = 0;
-    var processed = 0;
 
     for(y = this.cornerCo[maxCell].y, countY = 0; countY < 4; y += 1 * yModifier, countY++)
     {
@@ -75,7 +74,6 @@ Bot.prototype.firstEvalFunc = function(grid)
                     {
                         totalValue -= xCell.value / cell.value * this.euclidGrids[maxCell][y][x];
                     }
-                    processed++;
                 }
 
                 if(yCell)
@@ -88,7 +86,6 @@ Bot.prototype.firstEvalFunc = function(grid)
                     {
                         totalValue -= yCell.value / cell.value * this.euclidGrids[maxCell][y][x];
                     }
-                    processed++;
                 }
             }
         }
@@ -188,7 +185,7 @@ Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
                     }
                     else
                     {
-                        var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
+                        //var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
                         moves.push({score: -Number.MAX_SAFE_INTEGER});
                     }
 
@@ -201,7 +198,7 @@ Bot.prototype.minMax = function(grid, currentDepth, maxDepth)
                     }
                     else
                     {
-                        var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
+                        //var value = this.minMax(newGrid, currentDepth + 1, maxDepth);
                         moves.push({score: -Number.MAX_SAFE_INTEGER});
                     }
                 }

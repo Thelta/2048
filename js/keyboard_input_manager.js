@@ -1,5 +1,7 @@
 function KeyboardInputManager() {
   this.events = {};
+  this.games = 100;
+  this.gamesWon = 0;
 
   if (window.navigator.msPointerEnabled) {
     //Internet Explorer 10 style
@@ -33,7 +35,6 @@ KeyboardInputManager.prototype.emit = function (event, data) {
 
 KeyboardInputManager.prototype.listen = function () {
   var self = this;
-
   var map = {
     38: 0, // Up
     39: 1, // Right
@@ -64,13 +65,15 @@ KeyboardInputManager.prototype.listen = function () {
 
     if(!modifiers && event.which === 113)
     {
-      var bot = new Bot();
+      /*var bot = new Bot();
       var emptyCells = a.grid.availableCells();
       var depth = 0;
       depth = emptyCells.length <= 6 ? 4 : 2;
       var newMove = bot.minMax(a.grid, 0, depth);
       //console.log(newMove);
-      self.emit("move", newMove.move);
+      self.emit("move", newMove.move);*/
+      event.preventDefault();
+      self.emit("run100");
     }
 
     // R key restarts the game
